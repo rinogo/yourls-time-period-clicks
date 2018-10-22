@@ -1,50 +1,84 @@
 <?php
 /*
-Plugin Name: Custom API action
-Plugin URI: http://yourls.org/
-Description: Define custom API action 'delete'
+Plugin Name: Time-Period Clicks
+Plugin URI: https://github.com/rinogo/yourls-time-period-clicks
+Description: A simple plugin for reporting clicks in a specific time period.
 Version: 1.0
-Author: Ozh
-Author URI: http://ozh.org/
+Author: Rich Christiansen
+Author URI: http://endorkins.com
 */
 
-// Define custom action "delete"
-yourls_add_filter( 'api_action_delete', 'my_delete_function' );
+// Define custom action "url-stats-period"
+yourls_add_filter("api_action_url-stats-period", "tpc_get_stats");
 
-// Actually delete
-function my_delete_function() {
-	// Need 'shorturl' parameter
-	if( !isset( $_REQUEST['shorturl'] ) ) {
-		return array(
-			'statusCode' => 400,
-			'simple'     => "Need a 'shorturl' parameter",
-			'message'    => 'error: missing param',
-		);	
-	}
-	
-	$shorturl = $_REQUEST['shorturl'];
+//Get stats for `shorturl` between `since` and `until`.
+function tpc_get_stats() {
+	try {
+		global $ydb;
 
-	// Check if valid shorturl
-	if( !yourls_is_shorturl( $shorturl ) ) {
-		return array(
-			'statusCode' => 404,
-			'simple '    => 'Error: short URL not found',
-			'message'    => 'error: not found',
-		);	
-	}
+		//Process `shorturl` parameter
+		if(!isset($_REQUEST["shorturl"])) {
+			return array(
+				"errorCode" => 400,
+				"message"    => "error: Missing 'shorturl' parameter.",
+			);	
+		}
+		$shorturl = $_REQUEST["shorturl"];
+		$keyword = str_replace(YOURLS_SITE . "/" , "", $shorturl); //Accept either 'http://sho.rt/abc' or 'abc'
+
+		if(!yourls_is_shorturl($keyword)) {
+			return array(
+				"errorCode" => 404,
+				"message"    => "error: not found",
+			);	
+		}
+
+		//Process `since` and `until` parameters.
+		if(isset($_REQUEST["since"])) {
+			$since = intval($_REQUEST["since"]);
+		} else {
+			$since = 0; //Default to the Unix Epoch
+		}
+
+		if(isset($_REQUEST["until"])) {
+			$until = intval($_REQUEST["until"]);
+		} else {
+			$until = time(); //Default to now
+		}
+
+		if($since >= $until) {
+			return array(
+				"errorCode" => 400,
+				"message"    => "error: The 'since' value ($since) must be smaller than the 'until' value ($until).",
+			);
+		}
+		
+		$params = array(
+			"shorturl" => $keyword,
+			"since"    => date("Y-m-d H:i:s", $since),
+			"until"    => date("Y-m-d H:i:s", $until),
+		);
 	
-	// Delete shorturl
-	if( yourls_delete_link_by_keyword( $shorturl ) ) {
+	  $sql = "SELECT COUNT(*)
+	      FROM " . YOURLS_DB_TABLE_LOG . "
+	      WHERE
+					shorturl = :shorturl AND
+					click_time > :since AND
+					click_time <= :until";
+
+		$result = $ydb->fetchValue($sql, $params);
+
 		return array(
-			'statusCode' => 200,
-			'simple'     => "Shorturl $shorturl deleted",
-			'message'    => 'success: deleted',
-		);	
-	} else {
+			"statusCode"       => 200,
+			"message"          => "success",
+			"url-stats-period" => array(
+				"clicks"         => $result
+			)
+		);
+	} catch (Exception $e) {
 		return array(
-			'statusCode' => 500,
-			'simple'     => 'Error: could not delete shorturl, not sure why :-/',
-			'message'    => 'error: unknown error',
-		);	
+			"errorCode" => 500,
+			"message"    => "error: " . $e->getMessage(),
+		);
 	}
 }

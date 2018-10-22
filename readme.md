@@ -2,27 +2,12 @@ Plugin for YOURLS 1.6+: Custom API Action
 
 # What for
 
-Create custom API `action`, such as:  
-`http://sho.rt/yourls-api.php?username=x&password=xx&action=do_crazy_stuff&format=json` 
+Request clicks for a `shorturl` (required) between `since` (optional) and `until` (optional) using something like the following:
+`https://sho.rt/yourls-api.php?username=xxxxx&password=yyyyy&format=json&action=url-stats-period&shorturl=abc&since=1540234300&until=1540234309` 
 
-# How to
+# Return value
 
-* In `/user/plugins`, create a new folder named `api-action`
-* Drop these files in that directory
-* Go to the Plugins administration page and activate the plugin 
-* Have fun
-
-# Format your returns
-
-Your API function should, ideally, return an array like this one:
-```php
-	$return = array(
-		'statusCode' => 200, // HTTP-like status code
-		'simple'     => "a human readable one liner, if 'format=simple'",
-		'message'    => 'a return status',
-		'your_action' => array( 
-			'something' => 'some value',   // anything function wants to return
-			'otherthing' => 'other value',
-		),
-	);
+The API function returns something like this:
+```json
+	{"statusCode":200,"message":"success","url-stats-period":{"clicks":"1"}}
 ```
