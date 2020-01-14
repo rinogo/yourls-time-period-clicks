@@ -35,15 +35,15 @@ function tpc_get_stats() {
 			} else {
 				$keywords = $_REQUEST["shorturl"];
 			}
-
-			if(!yourls_is_shorturl($keywords[0])) {
-				return array(
-					"errorCode" => 404,
-					"message" => "error: not found",
-				);	
-			}
 		}
-
+		
+		if(empty($keywords[0]) || !yourls_is_shorturl($keywords[0])) {
+			return array(
+				"errorCode" => 404,
+				"message" => "error: not found",
+			);	
+		}
+		
 		//Process `since` and `until` parameters.
 		if(isset($_REQUEST["since"])) {
 			$since = intval($_REQUEST["since"]);
