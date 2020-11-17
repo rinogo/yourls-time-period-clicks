@@ -37,7 +37,7 @@ function tpc_get_stats() {
 			}
 		}
 		
-		if(empty($keywords[0]) || !yourls_is_shorturl($keywords[0])) {
+		if(empty($keywords[0]) || !yourls_is_shorturl($keywords)) {
 			return array(
 				"errorCode" => 404,
 				"message" => "error: not found",
