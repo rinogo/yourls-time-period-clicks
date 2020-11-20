@@ -30,10 +30,10 @@ function tpc_get_stats() {
 			$pos = strrpos($_REQUEST["shorturl"], "/");
 			//Accept "http://sho.rt/abc"
 			if($pos !== false) {
-				$keywords = substr($_REQUEST["shorturl"], $pos + 1);
+				$keywords = array(substr($_REQUEST["shorturl"], $pos + 1));
 			//Accept "abc"
 			} else {
-				$keywords = $_REQUEST["shorturl"];
+				$keywords = array($_REQUEST["shorturl"]);
 			}
 		}
 		
