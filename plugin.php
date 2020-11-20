@@ -30,14 +30,14 @@ function tpc_get_stats() {
 			$pos = strrpos($_REQUEST["shorturl"], "/");
 			//Accept "http://sho.rt/abc"
 			if($pos !== false) {
-				$keywords = substr($_REQUEST["shorturl"], $pos + 1);
+				$keywords = array(substr($_REQUEST["shorturl"], $pos + 1));
 			//Accept "abc"
 			} else {
-				$keywords = $_REQUEST["shorturl"];
+				$keywords = array($_REQUEST["shorturl"]);
 			}
 		}
 		
-		if(empty($keywords[0]) || !yourls_is_shorturl($keywords)) {
+		if(empty($keywords[0]) || !yourls_is_shorturl($keywords[0])) {
 			return array(
 				"errorCode" => 404,
 				"message" => "error: not found",
